@@ -1,0 +1,39 @@
+#!/bin/bash
+function unlock
+{
+  unlockOutput=$(bw unlock)
+  if [ "$unlockOutput" == "You are not logged in." ]
+    then
+      login
+    else
+      retrievePassword "$unlockOutput"
+  fi
+}
+
+function login
+{
+  loginOutput=$(bw login)
+  loginSubstring=${loginOutput%%!*}
+  if [ "${loginOutput%%!*}" == "You are logged in" ]
+    then retrievePassword "$loginOutput"
+  else
+    echo $loginOutput
+  fi
+}
+
+function retrievePassword
+{
+  validSessionOutput=$1
+  if [ "$validSessionOutput" != "Invalid master password." ]
+      then
+          sub="*BW_SESSION="
+          validSessionOutput=${validSessionOutput#$sub}
+          sub="> \$env*"
+          validSessionOutput=${validSessionOutput%$sub}
+          bw get password root@$(cat /etc/hostname) --session $validSessionOutput
+      else
+          echo "password"
+  fi
+}
+
+unlock
